@@ -16,4 +16,4 @@
     https://jfig27.github.io/Weather-Dashboard/index.html
 
 ## Screenshots: 
-![Screenshot of scheduler](./Assets/Images/weather-dash.png)
+![Screenshot of Weather Dashboard](./Assets/Images/weather-dash.png)
