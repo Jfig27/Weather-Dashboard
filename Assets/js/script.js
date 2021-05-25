@@ -3,22 +3,30 @@ const mykey = "2ffb1a07bdd3a394fab41ed6a6dd030a";
 $("#search-button").on("click", function () {
     var input = $("#input").val();
     $("#input").val("");
+    $("#today").empty()
+    $("#forecast").empty()
     weatherToday(input);
     weatherForecast(input)
 
     setTimeout(function(){ 
         console.log("getting.." + localStorage.getItem("city"))
-    var searchHistory = localStorage.getItem("city");
-    var searchDisplay = $("<button>").addClass("bg-dark text-light").text(searchHistory);
-    $(".history").append(searchDisplay);
+        var searchHistory = localStorage.getItem("city");
+        var searchDisplay = $("<button>").addClass("bg-dark text-light").text(searchHistory);
+        $(".history").append(searchDisplay);
     }, 100);
-
-
 });
 
+$(".history").on("click", "button", function () {
+    $("#forecast").empty()
+    $("#today").empty()
+    weatherToday($(this).text());
+    weatherForecast($(this).text());
+});
 
 function weatherToday(search) {
     let requestUrl = "https://api.openweathermap.org/data/2.5/weather?q=" + search + "&appid=" + mykey + "&units=imperial";
+
+    
     fetch(requestUrl)
     .then(function(response) {
         return response.json();
@@ -36,23 +44,44 @@ function weatherToday(search) {
         var humidity = $("<p>").addClass("card-text text-light").text("Humidity: " + data.main.humidity + "%");
         var temp = $("<p>").addClass("card-text text-light").text("Temperature: " + data.main.temp + " °F");
 
-        // setTimeout(function(){ 
-            $("#today").append(card);
-            card.append(cardBody);
-            city.append(img);
-            cardBody.append(city, date, temp, humidity, wind)
-    
-            localStorage.setItem("city", data.name)
-            console.log("should be "+localStorage.getItem("city"))
-        // }, 100);
+        var lon = data.coord.lon;
+        var lat = data.coord.lat;
 
 
-        $(".history").on("click", "button", function () {
-            card.remove()? console.log("removed i think"): console.log("not removed i guess")
-            weatherToday($(this).text());
-            weatherForecast($(this).text());
         
-        });
+    
+        localStorage.setItem("city", data.name)
+        console.log("should be "+localStorage.getItem("city"))
+
+        let requestUVurl = "https://api.openweathermap.org/data/2.5/uvi?appid="+ mykey +"&lat=" + lat + "&lon=" + lon
+        fetch(requestUVurl)
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            console.log(data)
+            console.log("data value: " + data.value)
+            
+            var uvIndex = $("<p>").addClass("card-text text-light").text("UV Index: ");
+            var uvColor = $("<span>").addClass("btn btn-sm").text(data.value);
+
+            if (data.value < 3) {
+                uvColor.addClass("btn-success");
+            } else if (data.value < 7) {
+                uvColor.addClass("btn-warning");
+            } else {
+                uvColor.addClass("btn-danger");
+            }
+
+            cardBody.append(uvIndex);
+            $("#today .card-body").append(uvIndex.append(uvColor));
+        })
+
+        $("#today").append(card);
+        card.append(cardBody);
+        city.append(img);
+        cardBody.append(city, date, temp, humidity, wind)
+
     })
 }
 
@@ -87,12 +116,6 @@ function weatherForecast(search) {
             card.append(cardBody)
             cardBody.append(img, date, temp, humidity, wind)
             $("#forecast").append(card)
-        }    
-        // $(".history").on("click", "button", function () {
-        //     card.remove()
-        //     weatherToday($(this).text());
-        //     weatherForecast($(this).text());
-        
-        // });
+        }   
     })
 }
